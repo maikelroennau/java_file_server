@@ -15,8 +15,8 @@ Current status implementation
  - Send file to server(no manager yet)
  - Start the server
  - Start the client:
- -- Select option 1 (only option 1 and 0 are implemented)
- -- Type the whole path to the file, i.e. C:\myfile.txt
+  - Select option 1 (only option 1 and 0 are implemented)
+  - Type the whole path to the file, i.e. C:\myfile.txt
  - The server will print a messagin saying if the transference was ok
  - The client will receive a confirmation from the server
 
