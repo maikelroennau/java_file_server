@@ -43,11 +43,8 @@ public class Client {
 
         String workToDo = "put";
         String command = workToDo + " " + fileName + " " + encodedContent;
-        
-        pr.println(command);
-        System.out.println(br.readLine());
 
-        pr.println("Cliente: Continuo por aqui");
+        pr.println(command);
         System.out.println(br.readLine());
 
         pr.close();
@@ -62,12 +59,12 @@ public class Client {
         if (length > Integer.MAX_VALUE) {
             // File is too large
         }
-        
+
         byte[] bytes = new byte[(int) length];
 
         int offset = 0;
         int numRead = 0;
-        
+
         while (offset < bytes.length
                 && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
             offset += numRead;

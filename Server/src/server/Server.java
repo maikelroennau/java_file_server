@@ -6,7 +6,6 @@
 package server;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -49,27 +48,25 @@ public class Server {
 
     public void saveFile(Socket clientSock) throws IOException {
         PrintWriter pr = new PrintWriter(clientSock.getOutputStream(), true);
-        
+
         BufferedReader br = new BufferedReader(new InputStreamReader(clientSock.getInputStream()));
 
         String[] splitedCommand = br.readLine().split("\\s+");
-        
+
         String command = splitedCommand[0];
         String fileName = splitedCommand[1];
         String contentFile = splitedCommand[2];
-        
+
         byte[] data = Base64.getDecoder().decode(contentFile);
         try {
             OutputStream file = new FileOutputStream(".\\" + fileName);
             file.write(data);
         } catch (IOException e) {
             e.printStackTrace();
-        }        
-        
-        pr.println("Olá, eu sou o servidor");
+        }
 
-        System.out.println(br.readLine());
-        pr.println("Servidor: Continuo por aqui");
+        System.out.println("File " + fileName + " successful saved");
+        pr.println("File successful saved.");
 
         pr.close();
         clientSock.close();
