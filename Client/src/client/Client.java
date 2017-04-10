@@ -92,7 +92,7 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         // Maybe reate json message here
     }
 

@@ -10,9 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -43,17 +41,23 @@ public class Server {
     // save the files
     public void run() {
         while (true) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Socket clientSocket = server.accept();
-                        attendRequisition(clientSocket);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            try {
+                Socket clientSocket = server.accept();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+
+                            attendRequisition(clientSocket);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            }).start();
+                }).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -65,7 +69,7 @@ public class Server {
             String[] splitedCommand = br.readLine().split("\\s+");
             String command = splitedCommand[0];
             String fileName = splitedCommand[1];
-            
+
             String contentFile = "";
 
             if (splitedCommand.length == 3) {
@@ -74,7 +78,7 @@ public class Server {
 
             switch (command) {
                 case "put":
-                    
+
                     break;
 
                 case "get":
@@ -117,7 +121,7 @@ public class Server {
             e.printStackTrace();
         }
     }
-    
+
     public String getSaveLocation() {
         return "";
     }

@@ -20,8 +20,8 @@ public class Manager {
 
     private ServerSocket server;
     private static final int MANAGER_PORT = 2099;
-    
-    private static final int SERVER_PORT = 2090; 
+
+    private static final int SERVER_PORT = 2090;
     private static final String FILE_SERVER_IP = "127.0.0.1";
 
     // Setting up the server in the given port
@@ -39,22 +39,27 @@ public class Manager {
     public void run() {
         while (true) {
             /*try {
-                Socket clientSock = server.accept();
-                attendRequisition(clientSock);
+                Socket clientSocket = server.accept();
+                attendRequisition(clientSocket);
             } catch (IOException e) {
                 e.printStackTrace();
             }*/
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Socket clientSock = server.accept();
-                        attendRequisition(clientSock);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            try {
+                Socket clientSocket = server.accept();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            attendRequisition(clientSocket);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            }).start();
+                }).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -66,7 +71,7 @@ public class Manager {
             String[] splitedCommand = br.readLine().split("\\s+");
             String command = splitedCommand[0];
             String fileName = splitedCommand[1];
-            
+
             String contentFile = "";
 
             if (splitedCommand.length == 3) {
@@ -77,7 +82,7 @@ public class Manager {
                 case "put":
                     String response = sendFileToServer(pw, br, fileName, contentFile);
                     pw.println(response);
-                    
+
                     updateRegistryTable();
                     break;
 
@@ -98,12 +103,12 @@ public class Manager {
     }
 
     public String sendFileToServer(PrintWriter pr, BufferedReader br, String fileName, String contentFile) {
-        
+
         return "Ok";
     }
-    
+
     public void updateRegistryTable() {
-        
+
     }
 
     /**
