@@ -25,8 +25,8 @@ import java.util.Scanner;
 public class Client {
 
     private Socket clientSocket;
-    private static final String ADDRESS = "127.0.0.1";
-    private static final int PORT = 2099;
+    private static final String MANAGER_ADDRESS = "127.0.0.1";
+    private static final int MANAGER_PORT = 2099;
 
     public Socket getClientSocket() {
         return clientSocket;
@@ -145,7 +145,7 @@ public class Client {
      */
     public static void main(String[] args) {
 
-        Client client = new Client(ADDRESS, PORT);
+        Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
 
         try {
             System.out.println("Wellcome!");

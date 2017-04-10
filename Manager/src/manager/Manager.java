@@ -19,7 +19,10 @@ import java.net.Socket;
 public class Manager {
 
     private ServerSocket server;
-    private static final int PORT = 2090;
+    private static final int MANAGER_PORT = 2099;
+    
+    private static final int SERVER_PORT = 2090; 
+    private static final String FILE_SERVER_IP = "127.0.0.1";
 
     // Setting up the server in the given port
     public Manager(int port) {
@@ -35,24 +38,35 @@ public class Manager {
     // save the files
     public void run() {
         while (true) {
-            try {
+            /*try {
                 Socket clientSock = server.accept();
                 attendRequisition(clientSock);
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            }*/
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Socket clientSock = server.accept();
+                        attendRequisition(clientSock);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 
     public String attendRequisition(Socket clientSocket) throws IOException {
         try {
-            PrintWriter pr = new PrintWriter(clientSocket.getOutputStream(), true);
+            PrintWriter pw = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             String[] splitedCommand = br.readLine().split("\\s+");
             String command = splitedCommand[0];
             String fileName = splitedCommand[1];
-
+            
             String contentFile = "";
 
             if (splitedCommand.length == 3) {
@@ -61,7 +75,10 @@ public class Manager {
 
             switch (command) {
                 case "put":
+                    String response = sendFileToServer(pw, br, fileName, contentFile);
+                    pw.println(response);
                     
+                    updateRegistryTable();
                     break;
 
                 case "get":
@@ -79,18 +96,21 @@ public class Manager {
 
         return "";
     }
-    
+
     public String sendFileToServer(PrintWriter pr, BufferedReader br, String fileName, String contentFile) {
         
+        return "Ok";
+    }
+    
+    public void updateRegistryTable() {
         
-        return "";
     }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Manager manager = new Manager(PORT);
+        Manager manager = new Manager(MANAGER_PORT);
         manager.run();
     }
 

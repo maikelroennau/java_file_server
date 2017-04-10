@@ -24,7 +24,9 @@ import java.net.Socket;
 public class Server {
 
     private ServerSocket server;
-    private static final int PORT = 2099;
+    private static final int SERVER_PORT = 2090;
+    private static final String FILE_SERVER_IP = "127.0.0.1";
+
     private static final String DEFAULT_PATH = "";
 
     // Setting up the server in the given port
@@ -41,23 +43,29 @@ public class Server {
     // save the files
     public void run() {
         while (true) {
-            try {
-                Socket clientSock = server.accept();
-                attendRequisition(clientSock);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Socket clientSocket = server.accept();
+                        attendRequisition(clientSocket);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 
-    public void attendRequisition(Socket clientSock) throws IOException {
+    public void attendRequisition(Socket clientSocket) throws IOException {
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(clientSock.getInputStream()));
+            PrintWriter pw = new PrintWriter(clientSocket.getOutputStream(), true);
+            BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             String[] splitedCommand = br.readLine().split("\\s+");
             String command = splitedCommand[0];
             String fileName = splitedCommand[1];
-
+            
             String contentFile = "";
 
             if (splitedCommand.length == 3) {
@@ -66,11 +74,11 @@ public class Server {
 
             switch (command) {
                 case "put":
-                    saveBinaryFile(fileName, contentFile);
+                    
                     break;
 
                 case "get":
-                    
+
                     break;
 
                 case "delete":
@@ -87,34 +95,38 @@ public class Server {
             fileName += ".bin";
 
             File file = new File(fileName);
-            OutputStream os = new FileOutputStream(file);
-            
+            FileOutputStream os = new FileOutputStream(file);
+
             os.write(encodedString.getBytes());
             os.flush();
             os.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         // Create json message here
     }
-    
+
     public void sendBase64File(Socket clientSocket, String fileName) throws IOException {
         try {
             File file = new File(fileName + ".bin");
-            InputStream is = new FileInputStream(file);
-            
+            FileInputStream is = new FileInputStream(file);
+
             // Continue from here
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public String getSaveLocation() {
+        return "";
     }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Server fileServer = new Server(PORT);
+        Server fileServer = new Server(SERVER_PORT);
         fileServer.run();
     }
 }
