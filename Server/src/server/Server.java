@@ -78,7 +78,8 @@ public class Server {
 
             switch (command) {
                 case "put":
-
+                    saveBinaryFile(fileName, contentFile);
+                    pw.println("File stored.");
                     break;
 
                 case "get":

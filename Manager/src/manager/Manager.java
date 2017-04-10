@@ -21,7 +21,7 @@ public class Manager {
     private ServerSocket server;
     private static final int MANAGER_PORT = 2099;
 
-    private static final int SERVER_PORT = 2090;
+    private static final int FILE_SERVER_PORT = 2090;
     private static final String FILE_SERVER_IP = "127.0.0.1";
 
     // Setting up the server in the given port
@@ -80,9 +80,9 @@ public class Manager {
 
             switch (command) {
                 case "put":
-                    String response = sendFileToServer(pw, br, fileName, contentFile);
+                    String response = sendFileToServer(command, fileName, contentFile);
                     pw.println(response);
-
+                    
                     updateRegistryTable();
                     break;
 
@@ -102,9 +102,25 @@ public class Manager {
         return "";
     }
 
-    public String sendFileToServer(PrintWriter pr, BufferedReader br, String fileName, String contentFile) {
-
-        return "Ok";
+    public String sendFileToServer(String command, String fileName, String contentFile) {
+        try {
+            Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
+            
+            PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
+            
+            pw.println(command + " " + fileName + " " + contentFile);
+            String response = br.readLine();
+            
+            pw.close();
+            br.close();
+            
+            return response;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return "Failed";
     }
 
     public void updateRegistryTable() {
