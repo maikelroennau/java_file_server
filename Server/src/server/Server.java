@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import org.json.JSONObject;
 
 /**
  *
@@ -26,6 +27,12 @@ public class Server {
     private static final String FILE_SERVER_IP = "127.0.0.1";
 
     private static final String DEFAULT_PATH = "";
+
+    private static final int REQUISITON_OK = 0;
+    private static final int SERVER_UNAVAILABLE = 1;
+    private static final int FILE_NOT_EXISTS = 2;
+    private static final int FILE_ALREADY_EXISTS = 3;
+    private static final int FILE_NOT_AVALIABLE = 4;
 
     // Setting up the server in the given port
     public Server(int port) {
@@ -78,8 +85,12 @@ public class Server {
 
             switch (command) {
                 case "put":
-                    saveBinaryFile(fileName, contentFile);
-                    pw.println("File stored.");
+                    String response = saveBinaryFile(fileName, contentFile);
+
+                    pw.println(response);
+
+                    pw.close();
+                    br.close();
                     break;
 
                 case "get":
@@ -95,7 +106,7 @@ public class Server {
         }
     }
 
-    public void saveBinaryFile(String fileName, String encodedString) throws IOException {
+    public String saveBinaryFile(String fileName, String encodedString) throws IOException {
         try {
             fileName += ".bin";
 
@@ -109,7 +120,7 @@ public class Server {
             e.printStackTrace();
         }
 
-        // Create json message here
+        return getJSONMessage(REQUISITON_OK);
     }
 
     public void sendBase64File(Socket clientSocket, String fileName) throws IOException {
@@ -123,6 +134,33 @@ public class Server {
         }
     }
 
+    public String getJSONMessage(int requisitionType) {
+        JSONObject responseMessage = new JSONObject();
+
+        switch (requisitionType) {
+            case 0:
+                responseMessage.put("returnCode", 0);
+                responseMessage.put("returnDescription", "Requisition successful executed (inclusion/busca/deletion).");
+                break;
+            
+            case 1:
+                break;
+                
+            case 2:
+                break;
+
+            case 3:
+
+                break;
+
+            case 4:
+
+                break;
+        }
+
+        return responseMessage.toString();
+    }
+    
     public String getSaveLocation() {
         return "";
     }

@@ -17,6 +17,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Base64;
 import java.util.Scanner;
+import org.json.JSONObject;
 
 /**
  *
@@ -54,13 +55,16 @@ public class Client {
             String command = workToDo + " " + fileName + " " + encodedContent;
 
             pw.println(command);
+
             String response = br.readLine();
+            printResponse(new JSONObject(response));
 
             pw.close();
             is.close();
-            System.out.println(response);
+            br.close();
         } catch (IOException e) {
-            System.out.println("Failed to send file.");
+            //System.out.println("Failed to send file.");
+            e.printStackTrace();
         }
     }
 
@@ -84,7 +88,7 @@ public class Client {
             OutputStream file = new FileOutputStream(fileName);
             file.write(data);
 
-            System.out.println(br.readLine());
+            //System.out.println(br.readLine());
 
             pw.close();
             is.close();
@@ -93,7 +97,7 @@ public class Client {
             e.printStackTrace();
         }
 
-        // Maybe reate json message here
+        // Maybe create json message here
     }
 
     public void deleteFlie(Socket clientSocket, String fileName) throws IOException {
@@ -105,7 +109,7 @@ public class Client {
         String command = workToDo + " " + fileName;
 
         pw.println(command);
-        System.out.println(br.readLine());
+        //System.out.println(br.readLine());
 
         pw.close();
         is.close();
@@ -139,6 +143,11 @@ public class Client {
 
         return new String(encoded);
     }
+    
+    public void printResponse(JSONObject response) {
+        System.out.println(response.get("returnCode"));
+        System.out.println(response.get("returnDescription"));
+    }
 
     /**
      * @param args the command line arguments
@@ -166,10 +175,10 @@ public class Client {
                 switch (option) {
                     case 1:
                         System.out.print("\nType the file path: ");
-                        scanner.nextLine();
-                        filePath = scanner.nextLine();
+                        //scanner.nextLine();
+                        //filePath = scanner.nextLine();
 
-                        client.uploadFile(client.getClientSocket(), filePath);
+                        client.uploadFile(client.getClientSocket(), "C:\\Gamevicio.txt");
                         break;
 
                     case 2:

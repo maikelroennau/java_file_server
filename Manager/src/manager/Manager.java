@@ -38,12 +38,6 @@ public class Manager {
     // save the files
     public void run() {
         while (true) {
-            /*try {
-                Socket clientSocket = server.accept();
-                attendRequisition(clientSocket);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
             try {
                 Socket clientSocket = server.accept();
 
