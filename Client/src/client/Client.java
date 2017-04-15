@@ -88,7 +88,7 @@ public class Client {
 
                 OutputStream file = new FileOutputStream(fileName);
                 file.write(data);
-                
+
                 file.flush();
                 file.close();
                 System.out.println("File sucessfull downloaded.");
@@ -113,7 +113,10 @@ public class Client {
         String command = workToDo + " " + fileName;
 
         pw.println(command);
-        //System.out.println(br.readLine());
+
+        String response = br.readLine();
+
+        printResponse(new JSONObject(response));
 
         pw.close();
         is.close();
