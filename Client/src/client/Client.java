@@ -154,6 +154,8 @@ public class Client {
      */
     public static void main(String[] args) {
 
+        Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
+        
         try {
             System.out.println("Wellcome!");
 
@@ -170,8 +172,6 @@ public class Client {
                 System.out.print("Option: ");
                 option = scanner.nextInt();
 
-                Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
-                
                 switch (option) {
                     case 1:
                         System.out.print("\nType the file path: ");
