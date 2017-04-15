@@ -7,14 +7,20 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
+import utilities.AlphanumFileComparator;
 
 /**
  *
@@ -34,7 +40,12 @@ public class Server {
     private static final int FILE_ALREADY_EXISTS = 3;
     private static final int FILE_NOT_AVALIABLE = 4;
 
-    // Setting up the server in the given port
+    private static final int FILE_RETURN = 5;
+
+    private static final String ROOT = "storage/";
+    private static final int MAX_ITEMS_PER_LOCATION = 36;
+
+// Setting up the server in the given port
     public Server(int port) {
         try {
             server = new ServerSocket(port);
@@ -83,9 +94,11 @@ public class Server {
                 contentFile = splitedCommand[2];
             }
 
+            String response;
+
             switch (command) {
                 case "put":
-                    String response = saveBinaryFile(fileName, contentFile);
+                    response = saveBinaryFile(fileName, contentFile);
 
                     pw.println(response);
 
@@ -94,7 +107,12 @@ public class Server {
                     break;
 
                 case "get":
+                    response = sendBase64File(fileName);
 
+                    pw.println(response);
+
+                    pw.close();
+                    br.close();
                     break;
 
                 case "delete":
@@ -110,7 +128,12 @@ public class Server {
         try {
             fileName += ".bin";
 
-            File file = new File(fileName);
+            File file = new File(getSaveLocation() + "/" + fileName);
+            
+            if (isFileExists(fileName)) {
+                return getJSONMessage(FILE_ALREADY_EXISTS);
+            }
+            
             FileOutputStream os = new FileOutputStream(file);
 
             os.write(encodedString.getBytes());
@@ -123,15 +146,50 @@ public class Server {
         return getJSONMessage(REQUISITON_OK);
     }
 
-    public void sendBase64File(Socket clientSocket, String fileName) throws IOException {
-        try {
-            File file = new File(fileName + ".bin");
-            FileInputStream is = new FileInputStream(file);
+    public boolean isFileExists(String fileName) throws IOException {
+        File root = new File(ROOT);
 
-            // Continue from here
+        Collection files = FileUtils.listFiles(root, null, true);
+
+        for (Iterator iterator = files.iterator(); iterator.hasNext();) {
+            File file = (File) iterator.next();
+            if (file.getName().equalsIgnoreCase(fileName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public String sendBase64File(String fileName) throws IOException {
+        try {
+            File root = new File(ROOT);
+
+            Collection files = FileUtils.listFiles(root, null, true);
+
+            for (Iterator iterator = files.iterator(); iterator.hasNext();) {
+                File file = (File) iterator.next();
+                if (file.getName().equalsIgnoreCase(fileName + ".bin")) {
+                    byte[] encoded = Files.readAllBytes(Paths.get(file.getPath()));
+
+                    return getFileReturnJSONMessage(new String(encoded));
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return getJSONMessage(FILE_NOT_EXISTS);
+    }
+
+    public String getFileReturnJSONMessage(String content) {
+        JSONObject responseMessage = new JSONObject();
+
+        responseMessage.put("returnCode", 5);
+        responseMessage.put("returnDescription", "File return");
+        responseMessage.put("content", content);
+
+        return responseMessage.toString();
     }
 
     public String getJSONMessage(int requisitionType) {
@@ -142,27 +200,66 @@ public class Server {
                 responseMessage.put("returnCode", 0);
                 responseMessage.put("returnDescription", "Requisition successful executed (inclusion/busca/deletion).");
                 break;
-            
-            case 1:
-                break;
-                
+
+            //case 1:
+            //break;
             case 2:
+                responseMessage.put("returnCode", 2);
+                responseMessage.put("returnDescription", "File does not exists.");
                 break;
 
             case 3:
-
+                responseMessage.put("returnCode", 3);
+                responseMessage.put("returnDescription", "File already exists.");
                 break;
 
-            case 4:
-
-                break;
+            //case 4:
+            //break;
         }
 
         return responseMessage.toString();
     }
-    
+
     public String getSaveLocation() {
-        return "";
+        if (!new File(ROOT).exists()) {
+            new File(ROOT).mkdir();
+
+            createFileTree(ROOT);
+
+            return recursiveWalk(sortListFiles(new File(ROOT).listFiles(File::isDirectory)));
+        } else {
+
+            return recursiveWalk(sortListFiles(new File(ROOT).listFiles(File::isDirectory)));
+        }
+    }
+
+    public static String recursiveWalk(File[] fileList) {
+
+        for (File f : fileList) {
+            if (f.listFiles().length < MAX_ITEMS_PER_LOCATION && !f.getPath().substring(f.getPath().length() - 2).equals(String.valueOf(MAX_ITEMS_PER_LOCATION - 1))) {
+                return f.getPath();
+            }
+
+            if (f.getPath().substring(f.getPath().length() - 2).equals(String.valueOf(MAX_ITEMS_PER_LOCATION - 1))) {
+                createFileTree(f.getPath() + "/");
+                return recursiveWalk(f.listFiles());
+            }
+        }
+
+        return "None";
+    }
+
+    public static File[] sortListFiles(File[] files) {
+        Arrays.sort(files, new AlphanumFileComparator());
+        return files;
+    }
+
+    public static String createFileTree(String path) {
+        for (int i = 0; i < MAX_ITEMS_PER_LOCATION; i++) {
+            new File(path + i).mkdir();
+        }
+
+        return path + "0";
     }
 
     /**
