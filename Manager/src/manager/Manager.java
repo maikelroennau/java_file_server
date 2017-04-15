@@ -73,7 +73,7 @@ public class Manager {
             }
 
             String response;
-            
+
             switch (command) {
                 case "put":
                     response = sendFileToServer(command, fileName, contentFile);
@@ -88,7 +88,8 @@ public class Manager {
                     break;
 
                 case "delete":
-
+                    response = deleteFile(command, fileName);
+                    pw.println(response);
                     break;
             }
 
@@ -121,6 +122,27 @@ public class Manager {
     }
 
     public String downloadFile(String command, String fileName) {
+        try {
+            Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
+
+            PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
+
+            pw.println(command + " " + fileName);
+            String response = br.readLine();
+
+            pw.close();
+            br.close();
+
+            return response;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "";
+    }
+
+    public String deleteFile(String command, String fileName) {
         try {
             Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
 

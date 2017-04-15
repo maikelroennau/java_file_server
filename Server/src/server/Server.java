@@ -86,7 +86,7 @@ public class Server {
 
             String[] splitedCommand = br.readLine().split("\\s+");
             String command = splitedCommand[0];
-            String fileName = splitedCommand[1];
+            String fileName = splitedCommand[1] + ".bin";
 
             String contentFile = "";
 
@@ -116,7 +116,12 @@ public class Server {
                     break;
 
                 case "delete":
+                    response = deleteFile(fileName);
 
+                    pw.println(response);
+
+                    pw.close();
+                    br.close();
                     break;
             }
         } catch (IOException e) {
@@ -126,14 +131,12 @@ public class Server {
 
     public String saveBinaryFile(String fileName, String encodedString) throws IOException {
         try {
-            fileName += ".bin";
-
             File file = new File(getSaveLocation() + "/" + fileName);
-            
+
             if (isFileExists(fileName)) {
                 return getJSONMessage(FILE_ALREADY_EXISTS);
             }
-            
+
             FileOutputStream os = new FileOutputStream(file);
 
             os.write(encodedString.getBytes());
@@ -144,6 +147,42 @@ public class Server {
         }
 
         return getJSONMessage(REQUISITON_OK);
+    }
+
+    public String sendBase64File(String fileName) throws IOException {
+        try {
+            File root = new File(ROOT);
+
+            Collection files = FileUtils.listFiles(root, null, true);
+
+            for (Iterator iterator = files.iterator(); iterator.hasNext();) {
+                File file = (File) iterator.next();
+                if (file.getName().equalsIgnoreCase(fileName)) {
+                    byte[] encoded = Files.readAllBytes(Paths.get(file.getPath()));
+
+                    return getFileReturnJSONMessage(new String(encoded));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return getJSONMessage(FILE_NOT_EXISTS);
+    }
+
+    public String deleteFile(String fileName) throws IOException {
+        File root = new File(ROOT);
+        Collection files = FileUtils.listFiles(root, null, true);
+
+        for (Iterator iterator = files.iterator(); iterator.hasNext();) {
+            File file = (File) iterator.next();
+            if (file.getName().equalsIgnoreCase(fileName)) {
+                file.delete();
+                return getJSONMessage(REQUISITON_OK);
+            }
+        }
+
+        return getJSONMessage(FILE_NOT_EXISTS);
     }
 
     public boolean isFileExists(String fileName) throws IOException {
@@ -159,27 +198,6 @@ public class Server {
         }
 
         return false;
-    }
-
-    public String sendBase64File(String fileName) throws IOException {
-        try {
-            File root = new File(ROOT);
-
-            Collection files = FileUtils.listFiles(root, null, true);
-
-            for (Iterator iterator = files.iterator(); iterator.hasNext();) {
-                File file = (File) iterator.next();
-                if (file.getName().equalsIgnoreCase(fileName + ".bin")) {
-                    byte[] encoded = Files.readAllBytes(Paths.get(file.getPath()));
-
-                    return getFileReturnJSONMessage(new String(encoded));
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return getJSONMessage(FILE_NOT_EXISTS);
     }
 
     public String getFileReturnJSONMessage(String content) {
