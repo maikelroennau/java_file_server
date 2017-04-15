@@ -14,7 +14,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import org.json.JSONObject;
+import utilities.AlphanumFileComparator;
 
 /**
  *
@@ -34,7 +36,9 @@ public class Server {
     private static final int FILE_ALREADY_EXISTS = 3;
     private static final int FILE_NOT_AVALIABLE = 4;
 
-    // Setting up the server in the given port
+    private static final String ROOT = "storage/";
+
+// Setting up the server in the given port
     public Server(int port) {
         try {
             server = new ServerSocket(port);
@@ -110,7 +114,7 @@ public class Server {
         try {
             fileName += ".bin";
 
-            File file = new File(fileName);
+            File file = new File(getSaveLocation() + "/" + fileName);
             FileOutputStream os = new FileOutputStream(file);
 
             os.write(encodedString.getBytes());
@@ -142,10 +146,10 @@ public class Server {
                 responseMessage.put("returnCode", 0);
                 responseMessage.put("returnDescription", "Requisition successful executed (inclusion/busca/deletion).");
                 break;
-            
+
             case 1:
                 break;
-                
+
             case 2:
                 break;
 
@@ -160,9 +164,47 @@ public class Server {
 
         return responseMessage.toString();
     }
-    
+
     public String getSaveLocation() {
-        return "";
+        if (!new File(ROOT).exists()) {
+            new File(ROOT).mkdir();
+
+            createFileTree(ROOT);
+
+            return recursiveWalk(sortListFiles(new File(ROOT).listFiles(File::isDirectory)));
+        } else {
+
+            return recursiveWalk(sortListFiles(new File(ROOT).listFiles(File::isDirectory)));
+        }
+    }
+
+    public static String recursiveWalk(File[] fileList) {
+
+        for (File f : fileList) {
+            if (f.listFiles().length < 36 && !f.getPath().substring(f.getPath().length() - 2).equals("35")) {
+                return f.getPath();
+            }
+
+            if (f.getPath().substring(f.getPath().length() - 2).equals("35")) {
+                createFileTree(f.getPath() + "/");
+                return recursiveWalk(f.listFiles());
+            }
+        }
+
+        return "None";
+    }
+
+    public static File[] sortListFiles(File[] files) {
+        Arrays.sort(files, new AlphanumFileComparator());
+        return files;
+    }
+
+    public static String createFileTree(String path) {
+        for (int i = 0; i < 36; i++) {
+            new File(path + i).mkdir();
+        }
+
+        return path + "0";
     }
 
     /**
