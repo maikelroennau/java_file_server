@@ -90,9 +90,9 @@ public class Client {
 
             //System.out.println(br.readLine());
 
-            pw.close();
-            is.close();
-            br.close();
+            //pw.close();
+            //is.close();
+            //br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -154,8 +154,6 @@ public class Client {
      */
     public static void main(String[] args) {
 
-        Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
-
         try {
             System.out.println("Wellcome!");
 
@@ -172,12 +170,14 @@ public class Client {
                 System.out.print("Option: ");
                 option = scanner.nextInt();
 
+                Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
+                
                 switch (option) {
                     case 1:
                         System.out.print("\nType the file path: ");
                         //scanner.nextLine();
                         //filePath = scanner.nextLine();
-
+                        
                         client.uploadFile(client.getClientSocket(), "C:\\Gamevicio.txt");
                         break;
 
