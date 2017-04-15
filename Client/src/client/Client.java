@@ -71,33 +71,37 @@ public class Client {
     public void downloadFile(Socket clientSocket, String fileName) throws IOException {
         try {
             PrintWriter pw = new PrintWriter(clientSocket.getOutputStream(), true);
+            InputStream is = clientSocket.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
             String workToDo = "get";
             String command = workToDo + " " + fileName;
 
-            InputStream is = clientSocket.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            pw.println(command);
 
-            String[] receivedInformation = br.readLine().split("\\s+");
+            String response = br.readLine();
 
-            fileName = receivedInformation[1];
-            String contentFile = receivedInformation[2];
+            String returnCone = new JSONObject(response).get("returnCode").toString();
 
-            byte[] data = Base64.getDecoder().decode(contentFile);
+            if (returnCone.equals("5")) {
+                byte[] data = Base64.getDecoder().decode(new JSONObject(response).get("content").toString());
 
-            OutputStream file = new FileOutputStream(fileName);
-            file.write(data);
+                OutputStream file = new FileOutputStream(fileName);
+                file.write(data);
+                
+                file.flush();
+                file.close();
+                System.out.println("File sucessfull downloaded.");
+            } else {
+                printResponse(new JSONObject(response));
+            }
 
-            //System.out.println(br.readLine());
-
-            //pw.close();
-            //is.close();
-            //br.close();
+            pw.close();
+            is.close();
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        // Maybe create json message here
     }
 
     public void deleteFlie(Socket clientSocket, String fileName) throws IOException {
@@ -143,9 +147,9 @@ public class Client {
 
         return new String(encoded);
     }
-    
+
     public void printResponse(JSONObject response) {
-        System.out.println(response.get("returnCode"));
+        //System.out.println(response.get("returnCode"));
         System.out.println(response.get("returnDescription"));
     }
 
@@ -171,14 +175,14 @@ public class Client {
                 option = scanner.nextInt();
 
                 Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
-                
+
                 switch (option) {
                     case 1:
                         System.out.print("\nType the file path: ");
-                        //scanner.nextLine();
-                        //filePath = scanner.nextLine();
-                        
-                        client.uploadFile(client.getClientSocket(), "C:\\Gamevicio.txt");
+                        scanner.nextLine();
+                        filePath = scanner.nextLine();
+
+                        client.uploadFile(client.getClientSocket(), filePath);
                         break;
 
                     case 2:

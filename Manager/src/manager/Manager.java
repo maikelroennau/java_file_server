@@ -72,16 +72,19 @@ public class Manager {
                 contentFile = splitedCommand[2];
             }
 
+            String response;
+            
             switch (command) {
                 case "put":
-                    String response = sendFileToServer(command, fileName, contentFile);
+                    response = sendFileToServer(command, fileName, contentFile);
                     pw.println(response);
-                    
+
                     updateRegistryTable();
                     break;
 
                 case "get":
-
+                    response = downloadFile(command, fileName);
+                    pw.println(response);
                     break;
 
                 case "delete":
@@ -99,22 +102,43 @@ public class Manager {
     public String sendFileToServer(String command, String fileName, String contentFile) {
         try {
             Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
-            
+
             PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
-            
+
             pw.println(command + " " + fileName + " " + contentFile);
             String response = br.readLine();
-            
+
             pw.close();
             br.close();
-            
+
             return response;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         return "Failed";
+    }
+
+    public String downloadFile(String command, String fileName) {
+        try {
+            Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
+
+            PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
+
+            pw.println(command + " " + fileName);
+            String response = br.readLine();
+
+            pw.close();
+            br.close();
+
+            return response;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "";
     }
 
     public void updateRegistryTable() {
