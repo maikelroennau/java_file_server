@@ -27,7 +27,7 @@ public class Client {
 
     private Socket clientSocket;
     private static final String MANAGER_ADDRESS = "127.0.0.1";
-    private static final int MANAGER_PORT = 2099;
+    private static final int MANAGER_PORT = 2080;
 
     public Socket getClientSocket() {
         return clientSocket;
@@ -44,6 +44,12 @@ public class Client {
     public void uploadFile(Socket clientSocket, String filePath) throws IOException {
         try {
             File file = new File(filePath);
+            
+            if (!file.exists()) {
+                System.out.println("File does not exist.");
+                return;
+            }
+            
             String fileName = file.getName();
             String encodedContent = encodeFileToBase64Binary(file);
 

@@ -11,6 +11,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONObject;
 
 /**
  *
@@ -19,10 +23,13 @@ import java.net.Socket;
 public class Manager {
 
     private ServerSocket server;
-    private static final int MANAGER_PORT = 2099;
+    private static final int MANAGER_PORT = 2080;
 
-    private static final int FILE_SERVER_PORT = 2090;
+    private static final int FILE_SERVER_START_PORT = 2090;
+    private static final int FILE_SERVER_END_PORT = 2094;
     private static final String FILE_SERVER_IP = "127.0.0.1";
+    private static ArrayList<Socket> serverList = new ArrayList<>();
+    public static int nextServer = 0;
 
     // Setting up the server in the given port
     public Manager(int port) {
@@ -34,17 +41,92 @@ public class Manager {
         }
     }
 
+    public void discoverOnlineSevers(boolean continuosMode) {
+        ArrayList<Socket> serversFound;
+
+        if (continuosMode) {
+            if (!serverList.isEmpty()) {
+                try {
+                    Thread.sleep(180000);
+                } catch (InterruptedException ex) {
+                    //Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            while (true) {
+                serversFound = new ArrayList<>();
+
+                for (int i = FILE_SERVER_START_PORT; i <= FILE_SERVER_END_PORT; i++) {
+                    try {
+                        //Socket fileServerSocket = new Socket(FILE_SERVER_IP, i);
+                        serversFound.add(new Socket(FILE_SERVER_IP, i));
+                    } catch (IOException ex) {
+                        //Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                serverList = serversFound;
+            }
+        } else {
+            serversFound = new ArrayList<>();
+
+            for (int i = FILE_SERVER_START_PORT; i <= FILE_SERVER_END_PORT; i++) {
+                try {
+                    //Socket fileServerSocket = new Socket(FILE_SERVER_IP, i);
+                    serversFound.add(new Socket(FILE_SERVER_IP, i));
+                } catch (IOException ex) {
+                    //Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            serverList = serversFound;
+        }
+    }
+
+    public Socket getNextServer() {
+        return serverList.get(nextServer++);
+    }
+
+    public Socket getServer(int index) {
+        if (!serverList.isEmpty()) {
+            return serverList.get(index);
+        }
+
+        return null;
+    }
+
+    public boolean isServerOnline() {
+        return !serverList.isEmpty();
+    }
+
+    public int serversOnline() {
+        return serverList.size();
+    }
+
     // Keep runing and accepting all requisitions, then calling the method to
     // save the files
     public void run() {
         while (true) {
             try {
+
+                if (serverList.isEmpty()) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            discoverOnlineSevers(true);
+                        }
+                    }).start();
+                }
+
                 Socket clientSocket = server.accept();
 
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
+                            if (!isServerOnline()) {
+                                discoverOnlineSevers(false);
+                            }
                             attendRequisition(clientSocket);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -76,23 +158,45 @@ public class Manager {
 
             switch (command) {
                 case "put":
-                    response = sendFileToServer(command, fileName, contentFile);
+                    response = sendFileToServer(getNextServer(), command, fileName, contentFile);
                     pw.println(response);
-
-                    updateRegistryTable();
                     break;
 
                 case "get":
-                    response = downloadFile(command, fileName);
-                    pw.println(response);
+                    for (int i = 0; i < serversOnline(); i++) {
+                        response = downloadFile(getServer(i), command, fileName);
+
+                        String returnCode = new JSONObject(response).get("returnCode").toString();
+                        if (returnCode.equals("5")) {
+                            pw.println(response);
+                            break;
+                        }
+
+                        if (i == serversOnline()-1) {
+                            pw.println(response);
+                        }
+                    }
                     break;
 
                 case "delete":
-                    response = deleteFile(command, fileName);
-                    pw.println(response);
+                    for (int i = 0; i < serversOnline(); i++) {
+                        response = deleteFile(getNextServer(), command, fileName);
+
+                        String returnCode = new JSONObject(response).get("returnCode").toString();
+                        if (returnCode.equals("0")) {
+                            pw.println(response);
+                            break;
+                        }
+
+                        if (i == serversOnline()) {
+                            pw.println(response);
+                        }
+                    }
                     break;
             }
 
+            pw.close();
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,9 +204,9 @@ public class Manager {
         return "";
     }
 
-    public String sendFileToServer(String command, String fileName, String contentFile) {
+    public String sendFileToServer(Socket fileServerSocket, String command, String fileName, String contentFile) {
         try {
-            Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
+            //Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
 
             PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
@@ -121,9 +225,9 @@ public class Manager {
         return "Failed";
     }
 
-    public String downloadFile(String command, String fileName) {
+    public String downloadFile(Socket fileServerSocket, String command, String fileName) {
         try {
-            Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
+            //Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
 
             PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
@@ -142,9 +246,9 @@ public class Manager {
         return "";
     }
 
-    public String deleteFile(String command, String fileName) {
+    public String deleteFile(Socket fileServerSocket, String command, String fileName) {
         try {
-            Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
+            //Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
 
             PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
