@@ -84,7 +84,22 @@ public class Manager {
     }
 
     public Socket getNextServer() {
-        return serverList.get(nextServer++);
+        if (serverList.size() == 1) {
+            return serverList.get(0);
+        }
+        
+        if (nextServer + 1 > serverList.size()) {
+            nextServer = 0;
+        } else {
+            nextServer++;
+        }
+        
+        if (nextServer == 0) {
+            return serverList.get(nextServer);
+        } else {
+            return serverList.get(nextServer-1);
+        }
+        
     }
 
     public Socket getServer(int index) {
@@ -180,7 +195,7 @@ public class Manager {
 
                 case "delete":
                     for (int i = 0; i < serversOnline(); i++) {
-                        response = deleteFile(getNextServer(), command, fileName);
+                        response = deleteFile(getServer(i), command, fileName);
 
                         String returnCode = new JSONObject(response).get("returnCode").toString();
                         if (returnCode.equals("0")) {
@@ -188,7 +203,7 @@ public class Manager {
                             break;
                         }
 
-                        if (i == serversOnline()) {
+                        if (i == serversOnline()-1) {
                             pw.println(response);
                         }
                     }

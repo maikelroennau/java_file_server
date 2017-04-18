@@ -69,12 +69,12 @@ public class Server {
 
                             attendRequisition(clientSocket);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            //e.printStackTrace();
                         }
                     }
                 }).start();
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
     }
