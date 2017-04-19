@@ -12,8 +12,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.JSONObject;
 
 /**
@@ -45,15 +43,15 @@ public class Manager {
         ArrayList<Socket> serversFound;
 
         if (continuosMode) {
-            if (!serverList.isEmpty()) {
-                try {
-                    Thread.sleep(180000);
-                } catch (InterruptedException ex) {
-                    //Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
             while (true) {
+                if (!serverList.isEmpty()) {
+                    try {
+                        Thread.sleep(6000);
+                    } catch (InterruptedException ex) {
+                        //Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
                 serversFound = new ArrayList<>();
 
                 for (int i = FILE_SERVER_START_PORT; i <= FILE_SERVER_END_PORT; i++) {
@@ -66,14 +64,25 @@ public class Manager {
                 }
 
                 serverList = serversFound;
+
+                if (onlineServers() == 0) {
+                    System.out.println("No server online, standby...");
+                    discoverOnlineSevers(continuosMode);
+                } else {
+                    System.out.println(onlineServers() + " server(s) online.");
+                }
+
             }
         } else {
+            Socket server;
             serversFound = new ArrayList<>();
 
             for (int i = FILE_SERVER_START_PORT; i <= FILE_SERVER_END_PORT; i++) {
                 try {
                     //Socket fileServerSocket = new Socket(FILE_SERVER_IP, i);
-                    serversFound.add(new Socket(FILE_SERVER_IP, i));
+                    server = new Socket(FILE_SERVER_IP, i);
+                    //server.setSoTimeout(200);
+                    serversFound.add(server);
                 } catch (IOException ex) {
                     //Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -83,23 +92,42 @@ public class Manager {
         }
     }
 
+    public void checkOnlineServers() {
+        for (int i = 0; i < serverList.size(); i++) {
+            try {
+                PrintWriter pw = new PrintWriter(serverList.get(i).getOutputStream(), true);
+                BufferedReader br = new BufferedReader(new InputStreamReader(serverList.get(i).getInputStream()));
+                
+                pw.println("connectionCheck");
+                String response = br.readLine();
+                
+                if (!response.equals("connected")) {
+                    serverList.remove(i);
+                }
+            } catch (IOException e) {
+                // Do nothing
+            }
+        }
+
+    }
+
     public Socket getNextServer() {
         if (serverList.size() == 1) {
             return serverList.get(0);
         }
-        
+
         if (nextServer + 1 > serverList.size()) {
             nextServer = 0;
         } else {
             nextServer++;
         }
-        
+
         if (nextServer == 0) {
             return serverList.get(nextServer);
         } else {
-            return serverList.get(nextServer-1);
+            return serverList.get(nextServer - 1);
         }
-        
+
     }
 
     public Socket getServer(int index) {
@@ -114,7 +142,7 @@ public class Manager {
         return !serverList.isEmpty();
     }
 
-    public int serversOnline() {
+    public int onlineServers() {
         return serverList.size();
     }
 
@@ -123,7 +151,6 @@ public class Manager {
     public void run() {
         while (true) {
             try {
-
                 if (serverList.isEmpty()) {
                     new Thread(new Runnable() {
                         @Override
@@ -178,7 +205,7 @@ public class Manager {
                     break;
 
                 case "get":
-                    for (int i = 0; i < serversOnline(); i++) {
+                    for (int i = 0; i < onlineServers(); i++) {
                         response = downloadFile(getServer(i), command, fileName);
 
                         String returnCode = new JSONObject(response).get("returnCode").toString();
@@ -187,14 +214,14 @@ public class Manager {
                             break;
                         }
 
-                        if (i == serversOnline()-1) {
+                        if (i == onlineServers() - 1) {
                             pw.println(response);
                         }
                     }
                     break;
 
                 case "delete":
-                    for (int i = 0; i < serversOnline(); i++) {
+                    for (int i = 0; i < onlineServers(); i++) {
                         response = deleteFile(getServer(i), command, fileName);
 
                         String returnCode = new JSONObject(response).get("returnCode").toString();
@@ -203,7 +230,7 @@ public class Manager {
                             break;
                         }
 
-                        if (i == serversOnline()-1) {
+                        if (i == onlineServers() - 1) {
                             pw.println(response);
                         }
                     }
@@ -263,8 +290,6 @@ public class Manager {
 
     public String deleteFile(Socket fileServerSocket, String command, String fileName) {
         try {
-            //Socket fileServerSocket = new Socket(FILE_SERVER_IP, FILE_SERVER_PORT);
-
             PrintWriter pw = new PrintWriter(fileServerSocket.getOutputStream(), true);
             BufferedReader br = new BufferedReader(new InputStreamReader(fileServerSocket.getInputStream()));
 
