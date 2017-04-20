@@ -36,7 +36,7 @@ This project aims to create a file server system for [this](https://github.com/s
   2. Download a file: type the filename to be downloaded
   3. Delete a file: type the filename to be deleted
  
- **NOTE: **
+ **NOTE:**
  - It is highly recommended to change the range of servers on Manager class to search only for one server if you are going using the simple system
  - To do that, change the value of 'FILE_SERVER_END_PORT' on line 27 to 2090
  
