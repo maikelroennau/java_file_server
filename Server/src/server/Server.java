@@ -69,12 +69,12 @@ public class Server {
 
                             attendRequisition(clientSocket);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            //e.printStackTrace();
                         }
                     }
                 }).start();
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
     }
@@ -85,6 +85,11 @@ public class Server {
             BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             String[] splitedCommand = br.readLine().split("\\s+");
+            
+            if (splitedCommand[0].equals("connectionCheck")) {
+                pw.println("connected");
+                return;
+            }
             String command = splitedCommand[0];
             String fileName = splitedCommand[1] + ".bin";
 
@@ -125,7 +130,7 @@ public class Server {
                     break;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            //System.out.println("A manager disconnected");
         }
     }
 

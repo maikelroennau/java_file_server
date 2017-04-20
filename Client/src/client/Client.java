@@ -25,25 +25,53 @@ import org.json.JSONObject;
  */
 public class Client {
 
-    private Socket clientSocket;
+    private Socket clientSocket = null;
     private static final String MANAGER_ADDRESS = "127.0.0.1";
-    private static final int MANAGER_PORT = 2099;
+    private static final int MANAGER_START_PORT = 2080;
+    private static final int MANAGER_END_PORT = 2082;
+    
+    private boolean connected = false;
 
     public Socket getClientSocket() {
         return clientSocket;
     }
+    
+    public boolean isConnectec() {
+        return connected;
+    }
+    
+    public void setConnected(boolean status) {
+        connected = status;
+    }
 
-    public Client(String host, int port) {
-        try {
-            clientSocket = new Socket(host, port);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public Client() {
+        clientSocket = discoverManager();
+    }
+
+    public Socket discoverManager() {
+        for (int i = MANAGER_START_PORT; i <= MANAGER_END_PORT; i++) {
+            try {
+                Socket manager = new Socket(MANAGER_ADDRESS, i);
+                setConnected(true);
+                return manager;
+            } catch (IOException e) {
+                clientSocket = null;
+                setConnected(false);
+            }
         }
+        
+        return null;
     }
 
     public void uploadFile(Socket clientSocket, String filePath) throws IOException {
         try {
             File file = new File(filePath);
+
+            if (!file.exists()) {
+                System.out.println("File does not exist.");
+                return;
+            }
+
             String fileName = file.getName();
             String encodedContent = encodeFileToBase64Binary(file);
 
@@ -161,60 +189,72 @@ public class Client {
      */
     public static void main(String[] args) {
 
-        try {
-            System.out.println("Wellcome!");
+        Client client = new Client();
+        
+        if (!client.isConnectec()) {
+            System.out.println("No manager(s) online, standby...");
+            client.discoverManager();
+        } else {
+            try {
+                System.out.println("Wellcome!");
 
-            Scanner scanner = new Scanner(System.in);
-            int option = -1;
-            String filePath;
+                Scanner scanner = new Scanner(System.in);
+                int option = -1;
+                String filePath;
 
-            while (option != 0) {
-                System.out.println("\nSelect an option:");
-                System.out.println("\n1 - Upload file");
-                System.out.println("2 - Download file");
-                System.out.println("3 - Delete file");
-                System.out.println("0 - Exit");
-                System.out.print("Option: ");
-                option = scanner.nextInt();
+                while (option != 0) {
+                    client = new Client();
+                    
+                    if (!client.isConnectec()) {
+                        System.out.println("No manager(s) online, standby...");
+                    } else {
+                    
+                        System.out.println("\nSelect an option:");
+                        System.out.println("\n1 - Upload file");
+                        System.out.println("2 - Download file");
+                        System.out.println("3 - Delete file");
+                        System.out.println("0 - Exit");
+                        System.out.print("Option: ");
+                        option = scanner.nextInt();
 
-                Client client = new Client(MANAGER_ADDRESS, MANAGER_PORT);
+                        switch (option) {
+                            case 1:
+                                System.out.print("\nType the file path: ");
+                                scanner.nextLine();
+                                filePath = scanner.nextLine();
 
-                switch (option) {
-                    case 1:
-                        System.out.print("\nType the file path: ");
-                        scanner.nextLine();
-                        filePath = scanner.nextLine();
+                                client.uploadFile(client.getClientSocket(), filePath);
+                                break;
 
-                        client.uploadFile(client.getClientSocket(), filePath);
-                        break;
+                            case 2:
+                                System.out.print("\nType the file name to be downloaded: ");
+                                scanner.nextLine();
+                                filePath = scanner.nextLine();
 
-                    case 2:
-                        System.out.print("\nType the file name to be downloaded: ");
-                        scanner.nextLine();
-                        filePath = scanner.nextLine();
+                                client.downloadFile(client.getClientSocket(), filePath);
+                                break;
 
-                        client.downloadFile(client.getClientSocket(), filePath);
-                        break;
+                            case 3:
+                                System.out.print("\nType the file name to deleted: ");
+                                scanner.nextLine();
+                                filePath = scanner.nextLine();
 
-                    case 3:
-                        System.out.print("\nType the file name to deleted: ");
-                        scanner.nextLine();
-                        filePath = scanner.nextLine();
+                                client.deleteFlie(client.getClientSocket(), filePath);
+                                break;
 
-                        client.deleteFlie(client.getClientSocket(), filePath);
-                        break;
+                            case 0:
+                                System.out.println("Exiting...");
+                                break;
 
-                    case 0:
-                        System.out.println("Exiting...");
-                        break;
-
-                    default:
-                        System.out.println("Unknown command.");
-                        break;
+                            default:
+                                System.out.println("Unknown command.");
+                                break;
+                        }
+                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }
