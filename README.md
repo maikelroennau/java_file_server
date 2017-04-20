@@ -16,19 +16,19 @@ Simple system: one client -> one manger -> one server
 - Start the server
 - Wait the manager to find the online server
 - Start the client and try the functions:
-  1. Upload a file..: type the whole path and name (i.e. C:\myfile.txt)
+  1. Upload a file: type the whole path and name (i.e. C:\myfile.txt)
   2. Download a file: type the filename to be downloaded
-  3. Delete a file..: type the filename to be deleted
+  3. Delete a file: type the filename to be deleted
  
 Multi-server system: one client -> one manager -> multiple servers
 - Start the manager
 - Start the servers
 - Wait the manager to find the online servers
 - Start the client and try the functions:
-  1. Upload a file..: type the whole path and name (i.e. C:\myfile.txt)
+  1. Upload a file: type the whole path and name (i.e. C:\myfile.txt)
   2. Download a file: type the filename to be downloaded
-  3. Delete a file..: type the filename to be deleted
+  3. Delete a file: type the filename to be deleted
   
 ## Authors
-- Burno Accioli
+- Bruno Accioli
 - Maikel Maciel Rönnau
