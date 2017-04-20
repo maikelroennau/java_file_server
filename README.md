@@ -6,20 +6,29 @@ This project aims to create a file server system for [this](https://github.com/s
 - The system needs to be controled by a central manager. 
 - This manager will be the interface between the client and the server. 
 - The manager will receive the files from the cilent and save them in the server(s).
-- The user can send a upload a file, download a file and delete a file
+- The user can upload a file, download a file and delete a file
 - When a user request a file the manager will search for it in the server(s) and send to the user
 
 ## Usage
 
-Current status implementation
- - Send file to server(no manager yet)
- - Start the server
- - Start the client:
-   - Select option 1 (only option 1 and 0 are implemented)
-   - Type the whole path to the file, i.e. C:\myfile.txt
- - The server will print a messagin saying if the transference was ok
- - The client will receive a confirmation from the server
-
+Simple system: one client -> one manger -> one server
+- Start the manager
+- Start the server
+- Wait the manager to find the online server
+- Start the client and try the functions:
+  - 1. Upload a file..: type the whole path and name (i.e. C:\myfile.txt)
+  - 2. Download a file: type the filename to be downloaded
+  - 3. Delete a file..: type the filename to be deleted
+ 
+Multi-server system: one client -> one manager -> multiple servers
+- Start the manager
+- Start the servers
+- Wait the manager to find the online servers
+- Start the client and try the functions:
+  - 1. Upload a file..: type the whole path and name (i.e. C:\myfile.txt)
+  - 2. Download a file: type the filename to be downloaded
+  - 3. Delete a file..: type the filename to be deleted
+  
 ## Authors
 - Burno Accioli
 - Maikel Maciel Rönnau
