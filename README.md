@@ -41,5 +41,5 @@ This project aims to create a file server system for [this](https://github.com/s
  - To do that, change the value of 'FILE_SERVER_END_PORT' on line 27 to 2090
  
 ## Authors
-- Bruno Accioli
 - Maikel Maciel Rönnau
+- Bruno Accioli
